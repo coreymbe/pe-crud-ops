@@ -5,10 +5,11 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"encoding/json"
+	"flag"
+	"fmt"
 	"io/ioutil"
 	"log"
 	"net/http"
-	"os"
 )
 
 type CertState struct {
@@ -24,9 +25,37 @@ type PurgeNode struct {
 }
 
 func main() {
-	// Requires a custom certificate called "nodripa.purge-node.pem".
-	// Certificate needs to be added the allowlist for both the Puppet CA and PuppetDB APIs
-	cert, err := tls.LoadX509KeyPair("/etc/puppetlabs/puppet/ssl/certs/nodripa.purge-node.pem", "/etc/puppetlabs/puppet/ssl/private_keys/nodripa.purge-node.pem")
+	help := flag.Bool("help", false, "Optional, prints usage info")
+	pe_console := flag.String("pe_console", "", "Required, the hostname of the PE Console")
+	agent := flag.String("agent", "", "Required, the hostname of the agent node")
+	flag.Parse()
+
+	usage := `usage:
+	
+purge_node -pe_console <PE_CONSOLE_HOSTNAME> -agent <AGENT_HOSTNAME> [-help]
+	
+Options:
+	-help        Optional, Prints this message.
+	-pe_console  Required, The hostname of the PE Console.
+	-agent       Required, The hostname of the agent node to add.
+ `
+
+	if *help == true {
+		fmt.Println(usage)
+		return
+	}
+
+	// There has to be a better way to ensure all of the required options are set.
+	if *pe_console == "" {
+		log.Fatalf("The pe_console option is required:\n%s", usage)
+	}
+	if *agent == "" {
+		log.Fatalf("The agent option is required:\n%s", usage)
+	}
+
+	// Requires a custom certificate called "pe-crud-ops-delete.pem".
+	// The certificate needs to be added the allowlist for both the Puppet CA and PuppetDB APIs.
+	cert, err := tls.LoadX509KeyPair("/etc/puppetlabs/puppet/ssl/certs/pe-crud-ops-delete.pem", "/etc/puppetlabs/puppet/ssl/private_keys/pe-crud-ops-delete.pem")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -69,7 +98,7 @@ func main() {
 
 	client := &http.Client{Transport: tr}
 
-	revoke_req, err := http.NewRequest("PUT", os.ExpandEnv("https://${PE_CONSOLE}:8140/puppet-ca/v1/certificate_status/{AGENT_HOSTNAME}"), put_body)
+	revoke_req, err := http.NewRequest("PUT", "https://"+*pe_console+":8140/puppet-ca/v1/certificate_status/"+*agent, put_body)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -87,7 +116,7 @@ func main() {
 	}
 	log.Printf(revoke_status)
 
-	delete_req, err := http.NewRequest("DELETE", os.ExpandEnv("https://${PE_CONSOLE}:8140/puppet-ca/v1/certificate_status/{AGENT_HOSTNAME}"), nil)
+	delete_req, err := http.NewRequest("DELETE", "https://"+*pe_console+":8140/puppet-ca/v1/certificate_status/"+*agent, nil)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -105,7 +134,7 @@ func main() {
 	}
 	log.Printf(delete_status)
 
-	purge_req, err := http.NewRequest("POST", os.ExpandEnv("https://${PE_CONSOLE}:8081/pdb/cmd/v1"), post_body)
+	purge_req, err := http.NewRequest("POST", "https://"+*pe_console+":8081/pdb/cmd/v1", post_body)
 	if err != nil {
 		log.Fatal(err)
 	}
