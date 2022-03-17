@@ -87,7 +87,7 @@ Options:
 		Command: "deactivate node",
 		Version: 3,
 		Payload: Payload{
-			Certname: "{AGENT_HOSTNAME}",
+			Certname: *agent,
 		},
 	}
 	purge_payload, err := json.Marshal(purge_data)

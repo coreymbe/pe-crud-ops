@@ -38,10 +38,10 @@ To check the status of the bootstrap task you will need to have the following in
 To remove a Puppet agent node from the Puppet installation you will need have the following information before running the script listed above:
 
   * FQDN of the PE Console.
-  * FQDN of the node that will become a Puppet agent node.
+  * FQDN of the Puppet agent node to remove.
   * On the primary server run: `/opt/puppetlabs/bin/puppetserver ca generate --certname pe-crud-ops-delete`
 
-The certificate needs to be added to the allowlist for both the Puppet CA and PupppetDB APIs. This can be done by adding the following parameters to the respective node groups.
+The certificate needs to be added to the allowlist for both the Puppet CA and PuppetDB APIs. This can be done by adding the following parameters to the respective node groups.
 
 **PE Infrastructure** -> **PE Certificate Authority** -> **Configuration data**:
 
