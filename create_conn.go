@@ -17,7 +17,7 @@ type SensitiveParameters struct {
 type Parameters struct {
 	User string `json:"user"`
 }
-type Payload struct {
+type ConnPayload struct {
 	Certnames           []string            `json:"certnames"`
 	Type                string              `json:"type"`
 	Parameters          Parameters          `json:"parameters"`
@@ -52,18 +52,8 @@ Options:
 		return
 	}
 
-	// There has to be a better way to ensure all of the required options are set.
-	if *pe_console == "" {
-		log.Fatalf("The pe_console option is required:\n%s", usage)
-	}
-	if *agent == "" {
-		log.Fatalf("The agent option is required:\n%s", usage)
-	}
-	if *token == "" {
-		log.Fatalf("The token option is required:\n%s", usage)
-	}
-	if *ssh_key == "" {
-		log.Fatalf("The ssh_key option is required:\n%s", usage)
+	if (*pe_console == "") || (*agent == "") || (*token == "") || (*ssh_key == "") {
+		log.Fatalf("The pe_console, agent, token, and ssh_key options are required:\n%s", usage)
 	}
 
 	private_key, err := ioutil.ReadFile(*ssh_key)
@@ -72,7 +62,7 @@ Options:
 	}
 	pk := string(private_key)
 
-	task_data := Payload{
+	task_data := ConnPayload{
 		Certnames: []string{*agent},
 		Type:      "ssh",
 		Parameters: Parameters{

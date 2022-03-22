@@ -54,15 +54,8 @@ Options:
 		return
 	}
 
-	// There has to be a better way to ensure all of the required options are set.
-	if *pe_console == "" {
-		log.Fatalf("The pe_console option is required:\n%s", usage)
-	}
-	if *agent == "" {
-		log.Fatalf("The agent option is required:\n%s", usage)
-	}
-	if *token == "" {
-		log.Fatalf("The token option is required:\n%s", usage)
+	if (*pe_console == "") || (*agent == "") || (*token == "") {
+		log.Fatalf("The pe_console, agent, token, and ssh_key options are required:\n%s", usage)
 	}
 
 	task_data := Payload{

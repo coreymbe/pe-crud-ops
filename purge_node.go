@@ -15,13 +15,13 @@ import (
 type CertState struct {
 	DesiredState string `json:"desired_state"`
 }
-type Payload struct {
+type PurgePayload struct {
 	Certname string `json:"certname"`
 }
 type PurgeNode struct {
-	Command string  `json:"command"`
-	Version int     `json:"version"`
-	Payload Payload `json:"payload"`
+	Command string       `json:"command"`
+	Version int          `json:"version"`
+	Payload PurgePayload `json:"payload"`
 }
 
 func main() {
@@ -45,12 +45,8 @@ Options:
 		return
 	}
 
-	// There has to be a better way to ensure all of the required options are set.
-	if *pe_console == "" {
-		log.Fatalf("The pe_console option is required:\n%s", usage)
-	}
-	if *agent == "" {
-		log.Fatalf("The agent option is required:\n%s", usage)
+	if (*pe_console == "") || (*agent == "") {
+		log.Fatalf("The pe_console, agent, token, and ssh_key options are required:\n%s", usage)
 	}
 
 	// Requires a custom certificate called "pe-crud-ops-delete.pem".
@@ -86,7 +82,7 @@ Options:
 	purge_data := PurgeNode{
 		Command: "deactivate node",
 		Version: 3,
-		Payload: Payload{
+		Payload: PurgePayload{
 			Certname: *agent,
 		},
 	}

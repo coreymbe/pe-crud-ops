@@ -30,12 +30,8 @@ Options:
 		return
 	}
 
-	// There has to be a better way to ensure all of the required options are set.
-	if *jobID == "" {
-		log.Fatalf("The jobID option is required:\n%s", usage)
-	}
-	if *token == "" {
-		log.Fatalf("The token option is required:\n%s", usage)
+	if (*jobID == "") || (*token == "") {
+		log.Fatalf("The jobID and token options are required:\n%s", usage)
 	}
 
 	tr := &http.Transport{
