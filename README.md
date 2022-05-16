@@ -1,45 +1,37 @@
 # PE CRUD Operations
 
-A series of `go` scripts to manually test CRUD operations for a Puppet Agent node against a Puppet Enterprise installation.
+CLI tool for testing Puppet Agent CRUD operations against a Puppet Enterprise installation.
 
 ## Setup
 
-### Create
+```
+git clone https://github.com/coreymbe/pe-crud-ops
+```
 
-  * `create_conn.go`
-  * `pe_bootstrap.go`
+```
+cd pe-crud-ops
+```
 
-To create a new Puppet agent node you will need have the following information before running the scripts listed above:
-
-  * FQDN of the PE Console.
-  * FQDN of the node that will become a Puppet agent node.
-  * SSH access to the node via a private key.
-  * PE RBAC token with admin permissions.
-
-***Note***: You will want to remember the Job ID that is returned as this will be used to check the status of the task.
+```
+go install
+```
 
 ---
 
-### Read
+**Note**: To remove a Puppet agent node from the Puppet Enterprise installation you will need create a dummy certificate for authentication. Follow the steps below to create and validate the certificate.
 
-  * `check_status.go`
+On the primary server run:
 
-To check the status of the bootstrap task you will need to have the following information before running the script listed above:
+```
+/opt/puppetlabs/bin/puppetserver ca generate --certname pe-crud-ops-delete
+```
 
-  * The Job ID of the bootstrap task.
-  * PE RBAC token with admin permissions.
+You will want to copy the following files to a local directory:
 
----
+  * `/etc/puppetlabs/puppet/ssl/certs/ca.pem`
+  * `/etc/puppetlabs/puppet/ssl/certs/pe-crud-ops-delete.pem`
+  * `/etc/puppetlabs/puppet/ssl/private_keys/pe-crud-ops-delete.pem`
 
-### Delete
-
-  * `purge_node.go`
-
-To remove a Puppet agent node from the Puppet installation you will need have the following information before running the script listed above:
-
-  * FQDN of the PE Console.
-  * FQDN of the Puppet agent node to remove.
-  * On the primary server run: `/opt/puppetlabs/bin/puppetserver ca generate --certname pe-crud-ops-delete`
 
 The certificate needs to be added to the allowlist for both the Puppet CA and PuppetDB APIs. This can be done by adding the following parameters to the respective node groups.
 
@@ -59,24 +51,47 @@ Parameter: allowlisted_certnames
 Value: ["pe-crud-ops-delete"]
 ```
 
-***Note***: As this request requires certificate authentication it is currently meant to be ran from the PE Primary Server to access the dummy cert you created.
+Set the following environment variables before running any `pe-crud-ops` commands.
+
+  * `$PE_CONSOLE`: FQDN of the PE Console.
+  * `$PE_TOKEN`: PE RBAC token with admin permissions.
+  *	`$PE_CACERT`: Path to a copy of the CA certificate.
+  * `$PE_HOSTCERT`: Path to a copy of the host certificate.
+  * `$PE_PRIVKEY`: Path to a copy of the host private key.
 
 ## Usage
 
-**Create Connection**:
+### Create
 
-  * `go run create_conn.go -pe_console <PE_CONSOLE_HOSTNAME> -agent <AGENT_HOSTNAME> -token <PE_TOKEN> -ssh_key <PRIVATE_KEY_PATH> [-ssh_user <SSH_USER>]`
+```
+pe-crud-ops -create -agent puppet-agent.example.com -ssh_creds /path/to/ssh/key.pem
+```
 
-**Bootstrap Agent**:
+***Options***:
 
-  * `go run pe_boostrap.go -pe_console <PE_CONSOLE_HOSTNAME> -agent <AGENT_HOSTNAME> -token <PE_TOKEN>`
+  * `agent`: The FQDN of the node to become a Puppet agent.
+  * `ssh_creds`: Path to an SSH private key to access the node.
+  * `ssh_user`: __Optional__ - SSH user with sudo privilege.
+  * `sudo_pass`: __Optional__ - Sudo password for the configured SSH user.
 
-**Check Status**:
+> **Note**: You will want to remember the number of the JobID that is returned as this can be used to check the status of the task.
 
-  * `go run check_status.go -jobID <JOB_ID> -token <PE_TOKEN>`
+### Read
 
-**Purge Node**:
+```
+pe-crud-ops -read -taskID 1
+```
 
-  * `go run purge_node.go -pe_console <PE_CONSOLE_HOSTNAME> -agent <AGENT_HOSTNAME>`
+***Options***:
 
----
+  * `taskID`: The job ID of the bootstrap task.
+
+### Delete
+
+```
+pe-crud-ops -delete -agent puppet-agent.example.com`
+```
+
+***Options***:
+
+  * `agent`: The certificate name of the Puppet agent node to remove.
