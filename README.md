@@ -51,7 +51,7 @@ Parameter: allowlisted_certnames
 Value: ["pe-crud-ops-delete"]
 ```
 
-Set the following environment variables before running any `pe-crud-ops` commands.
+Configure the following settings in the `.cobra.yaml` file before running any `pe-crud-ops` commands.
 
   * `$PE_CONSOLE`: FQDN of the PE Console.
   * `$PE_TOKEN`: PE RBAC token with admin permissions.
@@ -64,34 +64,34 @@ Set the following environment variables before running any `pe-crud-ops` command
 ### Create
 
 ```
-pe-crud-ops -create -agent puppet-agent.example.com -ssh_creds /path/to/ssh/key.pem
+pe-crud-ops create agent -a puppet-agent.example.com -s /path/to/ssh/key.pem
 ```
 
 ***Options***:
 
-  * `agent`: The FQDN of the node to become a Puppet agent.
-  * `ssh_creds`: Path to an SSH private key to access the node.
-  * `ssh_user`: __Optional__ - SSH user with sudo privilege.
-  * `sudo_pass`: __Optional__ - Sudo password for the configured SSH user.
+  * `--agent (-a)`: The FQDN of the node to become a Puppet agent.
+  * `--ssh_creds (-s)`: Path to an SSH private key to access the node.
+  * `--user (-u)`: __Optional__ - SSH user with sudo privilege.
+  * `--pass (-p)`: __Optional__ - Sudo password for the configured SSH user.
 
 > **Note**: You will want to remember the number of the JobID that is returned as this can be used to check the status of the task.
 
 ### Read
 
 ```
-pe-crud-ops -read -taskID 1
+pe-crud-ops agent status --task_id 1
 ```
 
 ***Options***:
 
-  * `taskID`: The job ID of the bootstrap task.
+  * `--task_id (-i)`: The Task ID of the bootstrap task.
 
 ### Delete
 
 ```
-pe-crud-ops -delete -agent puppet-agent.example.com`
+pe-crud-ops delete agent --agent puppet-agent.example.com`
 ```
 
 ***Options***:
 
-  * `agent`: The certificate name of the Puppet agent node to remove.
+  * `--agent (-a)`: The certificate name of the Puppet agent node to remove.

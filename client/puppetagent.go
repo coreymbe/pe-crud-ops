@@ -20,10 +20,13 @@ type PurgeNode struct {
 }
 
 // Bootstrap Payload Struct
-type Target struct {
-	Hostnames []string `json:"hostnames"`
-	User      *string  `json:"user"`
-	Transport string   `json:"transport"`
+type Targets struct {
+	Transport         string   `json:"transport"`
+	RunAs             string   `json:"run-as"`
+	User              string   `json:"user"`
+	PrivateKeyContent string   `json:"private-key-content"`
+	SudoPassword      string   `json:"sudo-password"`
+	Hostnames         []string `json:"hostnames"`
 }
 type Scope struct {
 	Nodes []string `json:"nodes"`
@@ -32,20 +35,20 @@ type Params struct {
 	Server string `json:"server"`
 }
 type TaskPayload struct {
-	Task   string   `json:"task"`
-	Params Params   `json:"params"`
-	Scope  Scope    `json:"scope"`
-	Target []Target `json:"target"`
+	Task    string    `json:"task"`
+	Params  Params    `json:"params"`
+	Scope   Scope     `json:"scope"`
+	Targets []Targets `json:"targets"`
 }
 
 // Connection Payload Struct
 type SensitiveParameters struct {
-	PrivateKeyContent string  `json:"private-key-content"`
-	SudoPassword      *string `json:"sudo-password"`
+	PrivateKeyContent string `json:"private-key-content"`
+	SudoPassword      string `json:"sudo-password"`
 }
 type Parameters struct {
-	User  *string `json:"user"`
-	RunAs string  `json:"run-as"`
+	User  string `json:"user"`
+	RunAs string `json:"run-as"`
 }
 type ConnPayload struct {
 	Certnames           []string            `json:"certnames"`
@@ -99,7 +102,7 @@ func (c *Client) TaskStatus(jobID string) (*Status, error) {
 }
 
 // CreateConn - Create new connection
-func (c *Client) CreateConn(agent string, transport_user *string, transport_cred string, sudo_pass *string) (*Connection, error) {
+func (c *Client) CreateConn(agent string, transport_user string, transport_cred string, sudo_pass string) (*Connection, error) {
 	conn_data := ConnPayload{
 		Certnames: []string{agent},
 		Type:      "ssh",
@@ -140,7 +143,7 @@ func (c *Client) CreateConn(agent string, transport_user *string, transport_cred
 }
 
 // Bootstrap - Run the pe_bootstrap task
-func (c *Client) Bootstrap(agent string, ssh_user *string) (*Bootstrap, error) {
+func (c *Client) Bootstrap(agent string, ssh_user string, sudo_pass string, transport_cred string) (*Bootstrap, error) {
 	task_data := TaskPayload{
 		Task: "pe_bootstrap",
 		Params: Params{
@@ -149,11 +152,14 @@ func (c *Client) Bootstrap(agent string, ssh_user *string) (*Bootstrap, error) {
 		Scope: Scope{
 			Nodes: []string{agent},
 		},
-		Target: []Target{
+		Targets: []Targets{
 			{
-				Hostnames: []string{agent},
-				User:      ssh_user,
-				Transport: "ssh",
+				Transport:         "ssh",
+				RunAs:             "root",
+				User:              ssh_user,
+				SudoPassword:      sudo_pass,
+				PrivateKeyContent: transport_cred,
+				Hostnames:         []string{agent},
 			},
 		},
 	}

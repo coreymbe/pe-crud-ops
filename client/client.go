@@ -4,8 +4,9 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
+	"os"
 )
 
 // Client Struct
@@ -45,7 +46,7 @@ func (c *Client) doRequest(req *http.Request) ([]byte, error) {
 	}
 	defer resp.Body.Close()
 
-	body, err := ioutil.ReadAll(resp.Body)
+	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return nil, err
 	}
@@ -61,12 +62,20 @@ func (c *Client) doRequest(req *http.Request) ([]byte, error) {
 
 // Delete Request
 func (c *Client) purgeRequest(req *http.Request) error {
+	//host_cert, err := os.ReadFile(c.Host_Cert)
+	//if err != nil {
+	//	return err
+	//}
+	//host_key, err := os.ReadFile(c.Host_Key)
+	//if err != nil {
+	//	return err
+	//}
 	cert, err := tls.LoadX509KeyPair(c.Host_Cert, c.Host_Key)
 	if err != nil {
 		return err
 	}
 
-	caCert, err := ioutil.ReadFile(c.CA_Cert)
+	caCert, err := os.ReadFile(c.CA_Cert)
 	if err != nil {
 		return err
 	}
@@ -90,16 +99,14 @@ func (c *Client) purgeRequest(req *http.Request) error {
 	}
 	defer resp.Body.Close()
 
-	body, err := ioutil.ReadAll(resp.Body)
+	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return err
 	}
 
-	// Need to get this logic properly implemented.
-	// Puppet CA API returns 201 and PuppetDB API returns 200.
-	if resp.StatusCode > 299 {
+	if isValid(resp.StatusCode) {
+		return nil
+	} else {
 		return fmt.Errorf("status: %d, body: %s", resp.StatusCode, body)
 	}
-
-	return nil
 }
